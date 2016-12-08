@@ -1,6 +1,7 @@
 
 var express = require("express");
 var socket = require("socket.io");
+var db = require("mongoose");
 var chalk = require("chalk");
 var datetime = require("node-datetime");
 
@@ -18,9 +19,48 @@ var onlineArr = [];
 var storeLoginArr = [];
 
 function newConnection(socket) {
+	
+	// set global variables
 	var ip = socket.handshake.address.substr(7);
-	var defName = "guest";
 	var name;
+
+
+	/*
+	// load database
+	db.connect("mongodb://192.168.0.16/dbtest");
+
+	// db.model("loginData", {tmp: [[{ip: "84.113.223.39", name: "home-test-name"}]]} );
+
+		// check if login data is available for this connection
+	if (db.model("loginData")) {
+		db.model("loginData").find(function (err, data) {
+			if (!err) {
+						console.log("DB CONNECTED");
+					var check = false;
+				for (count = 0; count < data.tmp[0].length; ) {
+					// if (ip == data[count].ip) {
+					if (ip == data.tmp[0][count].ip) {
+						var name = data.tmp[0][count].name;
+						var check = true;
+					}
+				}
+					if (!check) {  // create new db entry
+						var name = defName;
+
+
+					}
+				onlineArr.push({name: name, ip: ip, id: socket.id});
+
+			} else if (err) {
+				console.log(err);
+			}
+		});
+	}
+	*/
+	
+
+	// set user data stuff
+	var defName = "guest";
 		var check = false;
 	for (count = 0; count < storeLoginArr.length; count++) {
 		if (ip == storeLoginArr[count].ip) {
@@ -32,17 +72,24 @@ function newConnection(socket) {
 	if (!check) {
 		var name = defName;
 	}
-	onlineArr.push({id: socket.id, ip: ip, name: name});
+	onlineArr.push({name: name, ip: ip, id: socket.id});
 
+
+	// log connection
 	console.log(chalk.green(chalk.underline(curDate("H:M:S")) + " - connected: " + chalk.bold(socket.id + " - " + ip + " - " + name)));
 
-	function mouseMsg(data) {
+
+	// draw data
+	function drawEmit(data) {
 		// console.log(socket.id + " sending: " + data);
 
 		socket.broadcast.emit("mouse", data);  // goes to every connection except this one
 
 		// io.sockets.emit("mouse", data);  // goes to every connection including this one
 	}
+
+	socket.on("mouse", drawEmit);
+	
 
 	function addName(data) {
 		for (count = 0; count < onlineArr.length; count++) {
@@ -69,10 +116,9 @@ function newConnection(socket) {
 		}
 	}
 
-	socket.on("mouse", mouseMsg);
 	socket.on("info", addName);
+	io.sockets.emit("info", {online: onlineArr});	
 
-	io.sockets.emit("info", {online: onlineArr});
 
 	socket.on("disconnect", function () {  // disconnect
 

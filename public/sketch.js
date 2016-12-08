@@ -3,9 +3,10 @@ var socket;
 var port = 3333;
 var drawWHincr = 5;
 var cnv;
-var screenWidth = 0.9875;  // in percent
-var screenHeight = 0.98;  // in percent
+var screenWidth;
+var screenHeight;
 var drawWHdef = 30;
+var fps = 180;  // def = 60
 
 var drawWH = drawWHdef;
 var drawColorArr = [
@@ -17,12 +18,17 @@ var drawColorArr = [
 var onlineArr = [];
 var socketID;
 
+
 function setup() {
-	cnv = createCanvas(Math.round(windowWidth * screenWidth), Math.round(windowHeight * screenHeight));
+
+	frameRate(fps);
+
+	screenWidth = windowWidth;
+	screenHeight = windowHeight;
+	cnv = createCanvas(screenWidth, screenHeight);
 	background(128,128,128);
 
-	socket = io.connect("http://84.113.223.39:" + port);
-	// socket = io.connect("http://noahlt.localtunnel.me");
+	socket = io.connect("http://noahro.dynu.com:" + port);
 	socket.on("mouse", newDrawing);
 	socket.on("info", logInfo);
 
@@ -75,6 +81,7 @@ function login(name) {
 			id: socketID
 		};
 		socket.emit("info", data);
+		// socket.emit("dbInfo", data);
 		return "Logged in as '" + name + "'";
 	}
 }
@@ -106,8 +113,12 @@ function changeWidth(event) {
 function mouseWheel(changeWidth) {}
 
 function mouseDragged() {
+	// draw
 	noStroke();
+	fill(drawColorArr);
+	ellipse(mouseX * (screenWidth / window.innerWidth), mouseY * (screenHeight / window.innerHeight), drawWH, drawWH);
 
+	// send data to sockets
 	var data = {
 		x: mouseX,
 		y: mouseY,
@@ -116,8 +127,6 @@ function mouseDragged() {
 	};
 	socket.emit("mouse", data);
 
-	fill(drawColorArr);
-	ellipse(mouseX, mouseY, drawWH, drawWH);
 }
 
 function draw() {
