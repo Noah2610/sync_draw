@@ -29,6 +29,7 @@ function setup() {
 	background(128,128,128);
 
 	socket = io.connect("http://noahro.dynu.com:" + port);
+	// socket = io.connect("http://192.168.0.16:" + port || "http://noahro.dynu.com:" + port);
 	socket.on("mouse", newDrawing);
 	socket.on("info", logInfo);
 
